@@ -6,17 +6,17 @@
 	#include "ofxFftw.h"
 #endif
 
-ofxFft* ofxFft::create(int signalSize, fftWindowType windowType, fftImplementation implementation) {
-	ofxFft* fft;
-	if(implementation == OF_FFT_BASIC) {
+ofxFft * ofxFft::create(int signalSize, fftWindowType windowType, fftImplementation implementation) {
+	ofxFft * fft;
+	if (implementation == OF_FFT_BASIC) {
 		fft = new ofxFftBasic();
-	} else if(implementation == OF_FFT_FFTW) {
-		#ifdef OFX_FFT_USE_FFTW
-			fft = new ofxFftw();
-		#else
-			ofLogWarning() << "FFTW support requires defining OFX_FFT_USE_FFTW in your C++ flags, falling back to KISS";
-			fft = new ofxFftBasic();
-		#endif
+	} else if (implementation == OF_FFT_FFTW) {
+#ifdef OFX_FFT_USE_FFTW
+		fft = new ofxFftw();
+#else
+		ofLogWarning() << "FFTW support requires defining OFX_FFT_USE_FFTW in your C++ flags, falling back to KISS";
+		fft = new ofxFftBasic();
+#endif
 	}
 	fft->setup(signalSize, windowType);
 	return fft;
@@ -56,42 +56,45 @@ int ofxFft::getSignalSize() {
 
 void ofxFft::setWindowType(fftWindowType windowType) {
 	this->windowType = windowType;
-	if(windowType == OF_FFT_WINDOW_RECTANGULAR) {
-		for(int i = 0; i < signalSize; i++)
+	if (windowType == OF_FFT_WINDOW_RECTANGULAR) {
+		for (int i = 0; i < signalSize; i++)
 			window[i] = 1; // only used for windowSum
-	} else if(windowType == OF_FFT_WINDOW_BARTLETT) {
+	} else if (windowType == OF_FFT_WINDOW_BARTLETT) {
 		int half = signalSize / 2;
 		for (int i = 0; i < half; i++) {
-			window[i] = ((float) i / half);
-			window[i + half] = (1 - ((float) i / half));
+			window[i] = ((float)i / half);
+			window[i + half] = (1 - ((float)i / half));
 		}
-	} else if(windowType == OF_FFT_WINDOW_HANN) {
-		for(int i = 0; i < signalSize; i++)
+	} else if (windowType == OF_FFT_WINDOW_HANN) {
+		for (int i = 0; i < signalSize; i++)
 			window[i] = .5 * (1 - cos((TWO_PI * i) / (signalSize - 1)));
-	} else if(windowType == OF_FFT_WINDOW_HAMMING) {
-		for(int i = 0; i < signalSize; i++)
+	} else if (windowType == OF_FFT_WINDOW_HAMMING) {
+		for (int i = 0; i < signalSize; i++)
 			window[i] = .54 - .46 * cos((TWO_PI * i) / (signalSize - 1));
-	} else if(windowType == OF_FFT_WINDOW_SINE) {
-		for(int i = 0; i < signalSize; i++)
+	} else if (windowType == OF_FFT_WINDOW_BLACKMAN) {
+		for (int i = 0; i < signalSize; i++)
+			window[i] = .42 - .5 * cos((TWO_PI * i) / (signalSize - 1)) + .08 * cos((4 * PI * i) / (signalSize - 1));
+	} else if (windowType == OF_FFT_WINDOW_SINE) {
+		for (int i = 0; i < signalSize; i++)
 			window[i] = sin((PI * i) / (signalSize - 1));
 	}
 
 	windowSum = 0;
-	for(int i = 0; i < signalSize; i++)
+	for (int i = 0; i < signalSize; i++)
 		windowSum += window[i];
 
-	for(int i = 0; i < signalSize; i++)
+	for (int i = 0; i < signalSize; i++)
 		inverseWindow[i] = 1. / window[i];
 }
 
 ofxFft::~ofxFft() {
-	delete [] signal;
-	delete [] real;
-	delete [] imag;
-	delete [] amplitude;
-	delete [] phase;
-	delete [] window;
-	delete [] inverseWindow;
+	delete[] signal;
+	delete[] real;
+	delete[] imag;
+	delete[] amplitude;
+	delete[] phase;
+	delete[] window;
+	delete[] inverseWindow;
 }
 
 void ofxFft::clear() {
@@ -102,36 +105,36 @@ void ofxFft::clear() {
 	memset(phase, 0, sizeof(float) * binSize);
 }
 
-void ofxFft::copySignal(const float* signal) {
+void ofxFft::copySignal(const float * signal) {
 	memcpy(this->signal, signal, sizeof(float) * signalSize);
 }
 
-void ofxFft::copyReal(float* real) {
+void ofxFft::copyReal(float * real) {
 	memcpy(this->real, real, sizeof(float) * binSize);
 }
 
-void ofxFft::copyImaginary(float* imag) {
-	if(imag == NULL)
+void ofxFft::copyImaginary(float * imag) {
+	if (imag == NULL)
 		memset(this->imag, 0, sizeof(float) * binSize);
 	else
 		memcpy(this->imag, imag, sizeof(float) * binSize);
 }
 
-void ofxFft::copyAmplitude(float* amplitude) {
+void ofxFft::copyAmplitude(float * amplitude) {
 	memcpy(this->amplitude, amplitude, sizeof(float) * binSize);
 }
 
-void ofxFft::copyPhase(float* phase) {
-	if(phase == NULL)
+void ofxFft::copyPhase(float * phase) {
+	if (phase == NULL)
 		memset(this->phase, 0, sizeof(float) * binSize);
 	else
 		memcpy(this->phase, phase, sizeof(float) * binSize);
 }
 
 void ofxFft::prepareSignal() {
-	if(!signalUpdated)
+	if (!signalUpdated)
 		updateSignal();
-	if(!signalNormalized)
+	if (!signalNormalized)
 		normalizeSignal();
 }
 
@@ -143,67 +146,67 @@ void ofxFft::updateSignal() {
 }
 
 void ofxFft::normalizeSignal() {
-	float normalizer = (float) windowSum / (2 * signalSize);
+	float normalizer = (float)windowSum / (2 * signalSize);
 	for (int i = 0; i < signalSize; i++)
 		signal[i] *= normalizer;
 	signalNormalized = true;
 }
 
-float* ofxFft::getSignal() {
+float * ofxFft::getSignal() {
 	prepareSignal();
 	return signal;
 }
 
 void ofxFft::clampSignal() {
 	prepareSignal();
-	for(int i = 0; i < signalSize; i++) {
-		if(signal[i] > 1)
+	for (int i = 0; i < signalSize; i++) {
+		if (signal[i] > 1)
 			signal[i] = 1;
-		else if(signal[i] < -1)
+		else if (signal[i] < -1)
 			signal[i] = -1;
 	}
 }
 
 void ofxFft::prepareCartesian() {
-	if(!cartesianUpdated) {
-		if(!polarUpdated)
+	if (!cartesianUpdated) {
+		if (!polarUpdated)
 			executeFft();
 		else
 			updateCartesian();
 	}
-	if(!cartesianNormalized)
+	if (!cartesianNormalized)
 		normalizeCartesian();
 }
 
-float* ofxFft::getReal() {
+float * ofxFft::getReal() {
 	prepareCartesian();
 	return real;
 }
 
-float* ofxFft::getImaginary() {
+float * ofxFft::getImaginary() {
 	prepareCartesian();
 	return imag;
 }
 
 void ofxFft::preparePolar() {
-	if(!polarUpdated)
+	if (!polarUpdated)
 		updatePolar();
-	if(!polarNormalized)
+	if (!polarNormalized)
 		normalizePolar();
 }
 
-float* ofxFft::getAmplitude() {
+float * ofxFft::getAmplitude() {
 	preparePolar();
 	return amplitude;
 }
 
-float* ofxFft::getPhase() {
+float * ofxFft::getPhase() {
 	preparePolar();
 	return phase;
 }
 
 float ofxFft::getAmplitudeAtBin(float bin) {
-	float* amplitude = getAmplitude();
+	float * amplitude = getAmplitude();
 	int lowBin = ofClamp(floorf(bin), 0, binSize - 1);
 	int highBin = ofClamp(ceilf(bin), 0, binSize - 1);
 	return ofMap(bin, lowBin, highBin, amplitude[lowBin], amplitude[highBin]);
@@ -218,7 +221,7 @@ float ofxFft::getAmplitudeAtFrequency(float frequency, float sampleRate) {
 }
 
 void ofxFft::updateCartesian() {
-	for(int i = 0; i < binSize; i++) {
+	for (int i = 0; i < binSize; i++) {
 		real[i] = cosf(phase[i]) * amplitude[i];
 		imag[i] = sinf(phase[i]) * amplitude[i];
 	}
@@ -228,7 +231,7 @@ void ofxFft::updateCartesian() {
 
 void ofxFft::normalizeCartesian() {
 	float normalizer = 2. / windowSum;
-	for(int i = 0; i < binSize; i++) {
+	for (int i = 0; i < binSize; i++) {
 		real[i] *= normalizer;
 		imag[i] *= normalizer;
 	}
@@ -237,7 +240,7 @@ void ofxFft::normalizeCartesian() {
 
 void ofxFft::updatePolar() {
 	prepareCartesian();
-	for(int i = 0; i < binSize; i++) {
+	for (int i = 0; i < binSize; i++) {
 		amplitude[i] = cartesianToAmplitude(real[i], imag[i]);
 		phase[i] = cartesianToPhase(real[i], imag[i]);
 	}
@@ -247,7 +250,7 @@ void ofxFft::updatePolar() {
 
 void ofxFft::normalizePolar() {
 	float normalizer = 2. / windowSum;
-	for(int i = 0; i < binSize; i++)
+	for (int i = 0; i < binSize; i++)
 		amplitude[i] *= normalizer;
 	polarNormalized = true;
 }
@@ -261,18 +264,18 @@ void ofxFft::clearUpdates() {
 	signalNormalized = false;
 }
 
-void ofxFft::setSignal(const vector<float>& signal) {
+void ofxFft::setSignal(const vector<float> & signal) {
 	setSignal(&signal[0]);
 }
 
-void ofxFft::setSignal(const float* signal) {
+void ofxFft::setSignal(const float * signal) {
 	clearUpdates();
 	copySignal(signal);
 	signalUpdated = true;
 	signalNormalized = true;
 }
 
-void ofxFft::setCartesian(float* real, float* imag) {
+void ofxFft::setCartesian(float * real, float * imag) {
 	clearUpdates();
 	copyReal(real);
 	copyImaginary(imag);
@@ -280,7 +283,7 @@ void ofxFft::setCartesian(float* real, float* imag) {
 	cartesianNormalized = true;
 }
 
-void ofxFft::setPolar(float* amplitude, float* phase) {
+void ofxFft::setPolar(float * amplitude, float * phase) {
 	clearUpdates();
 	copyAmplitude(amplitude);
 	copyPhase(phase);

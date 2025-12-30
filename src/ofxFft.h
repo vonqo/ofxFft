@@ -7,6 +7,7 @@ enum fftWindowType {
 	OF_FFT_WINDOW_BARTLETT,
 	OF_FFT_WINDOW_HANN,
 	OF_FFT_WINDOW_HAMMING,
+	OF_FFT_WINDOW_BLACKMAN,
 	OF_FFT_WINDOW_SINE};
 
 enum fftImplementation {
